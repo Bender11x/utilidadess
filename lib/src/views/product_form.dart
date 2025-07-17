@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+import 'package:flutter_multi_formatter/formatters/currency_input_formatter.dart';
 import 'package:utilidades/src/controllers/product_controller.dart';
 import 'package:utilidades/src/models/product_model.dart';
 
@@ -29,22 +31,25 @@ class _ProductFormState extends State<ProductForm> {
   }
 
   void _salvar() async {
+    if (!_formKey.currentState!.validate()) return;
+
     final produto = ProductModel(
       id: widget.produto?.id,
       nome: _nomeController.text.trim(),
       preco: double.tryParse(
-        _precoController.text.replaceAll(RegExp(r'[^\d,]'), '').replaceAll(',', '.')
-      ) ?? 0.0,
+            _precoController.text.replaceAll(RegExp(r'[^\d,]'), '').replaceAll(',', '.'),
+          ) ??
+          0.0,
       descricao: _descricaoController.text.trim(),
     );
 
-    if(widget.produto == null){
+    if (widget.produto == null) {
       await widget.controller.criarProduto(produto);
-    }else{
+    } else {
       await widget.controller.atualizarProduto(produto);
     }
 
-    if(context.mounted){
+    if (context.mounted) {
       Navigator.pop(context, true);
     }
   }
@@ -66,15 +71,20 @@ class _ProductFormState extends State<ProductForm> {
             TextFormField(
               controller: _precoController,
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                CurrencyInputFormatter(
+                  leadingSymbol: "R\$",
+                  useSymbolPadding: true,
+                  thousandSeparator: ThousandSeparator.Period,
+                  mantissaLength: 2,
+                )
+              ],
               decoration: const InputDecoration(labelText: "Preço do produto"),
-              validator:
-                  (v) => v!.isEmpty ? "Informe o preço do produto" : null,
+              validator: (v) => v!.isEmpty ? "Informe o preço do produto" : null,
             ),
             TextFormField(
               controller: _descricaoController,
-              decoration: const InputDecoration(
-                labelText: "Descrição do produto",
-              ),
+              decoration: const InputDecoration(labelText: "Descrição do produto"),
               validator: (v) => v!.isEmpty ? "Informe uma descrição" : null,
             ),
           ],
@@ -83,9 +93,12 @@ class _ProductFormState extends State<ProductForm> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text("Cancelar"),
+          child: const Text("Cancelar"),
         ),
-        ElevatedButton(onPressed: _salvar, child: Text("Salvar")),
+        ElevatedButton(
+          onPressed: _salvar,
+          child: const Text("Salvar"),
+        ),
       ],
     );
   }
